@@ -2,6 +2,7 @@
     "extensions": [
          {
             "id": "lnticket",
+            "repo": "https://github.com/lnbits/support-tickets-extension",
             "name": "Support Tickets",
             "version": "0.3",
             "short_description": "Get paid sats to answer questions",

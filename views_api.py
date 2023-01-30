@@ -50,12 +50,12 @@ async def api_form_create(
 
         if not form:
             raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND, detail=f"Form does not exist."
+                status_code=HTTPStatus.NOT_FOUND, detail="Form does not exist."
             )
 
         if form.wallet != wallet.wallet.id:
             raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN, detail=f"Not your form."
+                status_code=HTTPStatus.FORBIDDEN, detail="Not your form."
             )
 
         form = await update_form(form_id, **data.dict())
@@ -70,11 +70,11 @@ async def api_form_delete(form_id, wallet: WalletTypeInfo = Depends(get_key_type
 
     if not form:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=f"Form does not exist."
+            status_code=HTTPStatus.NOT_FOUND, detail="Form does not exist."
         )
 
     if form.wallet != wallet.wallet.id:
-        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail=f"Not your form.")
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your form.")
 
     await delete_form(form_id)
 
@@ -102,11 +102,11 @@ async def api_ticket_make_ticket(data: CreateTicketData, form_id):
     form = await get_form(form_id)
     if not form:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=f"LNTicket does not exist."
+            status_code=HTTPStatus.NOT_FOUND, detail="LNTicket does not exist."
         )
     if data.sats < 1:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=f"0 invoices not allowed."
+            status_code=HTTPStatus.NOT_FOUND, detail="0 invoices not allowed."
         )
 
     nwords = len(re.split(r"\s+", data.ltext))
@@ -136,6 +136,7 @@ async def api_ticket_make_ticket(data: CreateTicketData, form_id):
 @lnticket_ext.get("/api/v1/tickets/{payment_hash}", status_code=HTTPStatus.OK)
 async def api_ticket_send_ticket(payment_hash):
     ticket = await get_ticket(payment_hash)
+    assert ticket
 
     try:
         status = await api_payment(payment_hash)
@@ -154,7 +155,7 @@ async def api_ticket_delete(ticket_id, wallet: WalletTypeInfo = Depends(get_key_
 
     if not ticket:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=f"LNTicket does not exist."
+            status_code=HTTPStatus.NOT_FOUND, detail="LNTicket does not exist."
         )
 
     if ticket.wallet != wallet.wallet.id:

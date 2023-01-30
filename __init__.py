@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 from fastapi import APIRouter
 from starlette.staticfiles import StaticFiles

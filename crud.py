@@ -38,7 +38,7 @@ async def set_ticket_paid(payment_hash: str) -> Tickets:
     row = await db.fetchone(
         "SELECT * FROM lnticket.ticket WHERE id = ?", (payment_hash,)
     )
-    if row[7] is False:
+    if row[7] == False:
         await db.execute(
             """
             UPDATE lnticket.ticket

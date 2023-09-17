@@ -1,7 +1,6 @@
 import asyncio
 
 from fastapi import APIRouter
-from starlette.staticfiles import StaticFiles
 
 from lnbits.db import Database
 from lnbits.helpers import template_renderer
@@ -14,14 +13,13 @@ lnticket_ext: APIRouter = APIRouter(prefix="/lnticket", tags=["LNTicket"])
 lnticket_static_files = [
     {
         "path": "/lnticket/static",
-        "app": StaticFiles(directory="lnbits/extensions/lnticket/static"),
         "name": "lnticket_static",
     }
 ]
 
 
 def lnticket_renderer():
-    return template_renderer(["lnbits/extensions/lnticket/templates"])
+    return template_renderer(["lnticket/templates"])
 
 
 from .tasks import wait_for_paid_invoices

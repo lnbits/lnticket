@@ -3,5 +3,5 @@
   "short_description": "LN support ticket system",
   "tile": "/lnticket/static/image/lntickets.png",
   "contributors": ["benarc"],
-  "min_lnbits_version": "0.11.0"
+  "min_lnbits_version": "0.12.5"
 }

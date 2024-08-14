@@ -1,12 +1,13 @@
 from typing import List, Optional, Union
 
 import httpx
-
 from lnbits.core.models import Wallet
+from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
 
-from . import db
 from .models import CreateFormData, CreateTicketData, Forms, Tickets
+
+db = Database("ext_lnticket")
 
 
 async def create_ticket(
@@ -38,7 +39,7 @@ async def set_ticket_paid(payment_hash: str) -> Tickets:
     row = await db.fetchone(
         "SELECT * FROM lnticket.ticket WHERE id = ?", (payment_hash,)
     )
-    if row[7] == False:
+    if not row[7]:
         await db.execute(
             """
             UPDATE lnticket.ticket
@@ -111,7 +112,8 @@ async def create_form(data: CreateFormData, wallet: Wallet) -> Forms:
     form_id = urlsafe_short_hash()
     await db.execute(
         """
-        INSERT INTO lnticket.form2 (id, wallet, name, webhook, description, flatrate, amount, amountmade)
+        INSERT INTO lnticket.form2
+        (id, wallet, name, webhook, description, flatrate, amount, amountmade)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (

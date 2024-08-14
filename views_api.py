@@ -1,15 +1,13 @@
 import re
 from http import HTTPStatus
 
-from fastapi import Depends, Query
+from fastapi import APIRouter, Depends, Query
+from lnbits.core.crud import get_standalone_payment, get_user
+from lnbits.core.models import WalletTypeInfo
+from lnbits.core.services import create_invoice
+from lnbits.decorators import get_key_type
 from starlette.exceptions import HTTPException
 
-from lnbits.core.crud import get_user
-from lnbits.core.services import create_invoice
-from lnbits.core.views.api import api_payment
-from lnbits.decorators import WalletTypeInfo, get_key_type
-
-from . import lnticket_ext
 from .crud import (
     create_form,
     create_ticket,
@@ -24,10 +22,10 @@ from .crud import (
 )
 from .models import CreateFormData, CreateTicketData
 
-# FORMS
+lnticket_api_router: APIRouter = APIRouter()
 
 
-@lnticket_ext.get("/api/v1/forms")
+@lnticket_api_router.get("/api/v1/forms")
 async def api_forms_get(
     all_wallets: bool = Query(False), wallet: WalletTypeInfo = Depends(get_key_type)
 ):
@@ -40,8 +38,8 @@ async def api_forms_get(
     return [form.dict() for form in await get_forms(wallet_ids)]
 
 
-@lnticket_ext.post("/api/v1/forms", status_code=HTTPStatus.CREATED)
-@lnticket_ext.put("/api/v1/forms/{form_id}")
+@lnticket_api_router.post("/api/v1/forms", status_code=HTTPStatus.CREATED)
+@lnticket_api_router.put("/api/v1/forms/{form_id}")
 async def api_form_create(
     data: CreateFormData, form_id=None, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
@@ -64,7 +62,7 @@ async def api_form_create(
     return form.dict()
 
 
-@lnticket_ext.delete("/api/v1/forms/{form_id}")
+@lnticket_api_router.delete("/api/v1/forms/{form_id}")
 async def api_form_delete(form_id, wallet: WalletTypeInfo = Depends(get_key_type)):
     form = await get_form(form_id)
 
@@ -84,7 +82,7 @@ async def api_form_delete(form_id, wallet: WalletTypeInfo = Depends(get_key_type
 #########tickets##########
 
 
-@lnticket_ext.get("/api/v1/tickets")
+@lnticket_api_router.get("/api/v1/tickets")
 async def api_tickets(
     all_wallets: bool = Query(False), wallet: WalletTypeInfo = Depends(get_key_type)
 ):
@@ -97,7 +95,7 @@ async def api_tickets(
     return [form.dict() for form in await get_tickets(wallet_ids)]
 
 
-@lnticket_ext.post("/api/v1/tickets/{form_id}", status_code=HTTPStatus.CREATED)
+@lnticket_api_router.post("/api/v1/tickets/{form_id}", status_code=HTTPStatus.CREATED)
 async def api_ticket_make_ticket(data: CreateTicketData, form_id):
     form = await get_form(form_id)
     if not form:
@@ -118,8 +116,10 @@ async def api_ticket_make_ticket(data: CreateTicketData, form_id):
             memo=f"ticket with {nwords} words on {form_id}",
             extra={"tag": "lnticket"},
         )
-    except Exception as e:
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(e))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail=str(exc)
+        ) from exc
 
     ticket = await create_ticket(
         payment_hash=payment_hash, wallet=form.wallet, data=data
@@ -133,23 +133,26 @@ async def api_ticket_make_ticket(data: CreateTicketData, form_id):
     return {"payment_hash": payment_hash, "payment_request": payment_request}
 
 
-@lnticket_ext.get("/api/v1/tickets/{payment_hash}", status_code=HTTPStatus.OK)
+@lnticket_api_router.get("/api/v1/tickets/{payment_hash}", status_code=HTTPStatus.OK)
 async def api_ticket_send_ticket(payment_hash):
     ticket = await get_ticket(payment_hash)
-    assert ticket
+    if not ticket:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="LNTicket does not exist."
+        )
+    payment = await get_standalone_payment(payment_hash)
+    if not payment:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist."
+        )
 
-    try:
-        status = await api_payment(payment_hash)
-        if status["paid"]:
-            await set_ticket_paid(payment_hash=payment_hash)
-            return {"paid": True}
-    except Exception:
-        return {"paid": False}
-
-    return {"paid": False}
+    status = await payment.check_status()
+    if status.success:
+        await set_ticket_paid(payment_hash=payment_hash)
+    return {"paid": status.success}
 
 
-@lnticket_ext.delete("/api/v1/tickets/{ticket_id}")
+@lnticket_api_router.delete("/api/v1/tickets/{ticket_id}")
 async def api_ticket_delete(ticket_id, wallet: WalletTypeInfo = Depends(get_key_type)):
     ticket = await get_ticket(ticket_id)
 

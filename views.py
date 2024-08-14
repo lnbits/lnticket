@@ -1,28 +1,32 @@
 from http import HTTPStatus
 
-from fastapi import Depends, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from starlette.exceptions import HTTPException
-from starlette.responses import HTMLResponse
-
 from lnbits.core.crud import get_wallet
 from lnbits.core.models import User
 from lnbits.decorators import check_user_exists
+from lnbits.helpers import template_renderer
+from starlette.exceptions import HTTPException
+from starlette.responses import HTMLResponse
 
-from . import lnticket_ext, lnticket_renderer
 from .crud import get_form
 
 templates = Jinja2Templates(directory="templates")
+lnticket_generic_router = APIRouter()
 
 
-@lnticket_ext.get("/", response_class=HTMLResponse)
+def lnticket_renderer():
+    return template_renderer(["lnticket/templates"])
+
+
+@lnticket_generic_router.get("/", response_class=HTMLResponse)
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return lnticket_renderer().TemplateResponse(
         "lnticket/index.html", {"request": request, "user": user.dict()}
     )
 
 
-@lnticket_ext.get("/{form_id}")
+@lnticket_generic_router.get("/{form_id}")
 async def display(request: Request, form_id):
     form = await get_form(form_id)
     if not form:

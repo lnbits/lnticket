@@ -27,5 +27,4 @@ async def on_invoice_paid(payment: Payment) -> None:
         logger.error("this should never happen", payment)
         return
 
-    await payment.set_pending(False)
     await set_ticket_paid(payment.payment_hash)

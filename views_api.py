@@ -140,7 +140,7 @@ async def api_ticket_send_ticket(payment_hash):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="LNTicket does not exist."
         )
-    payment = await get_standalone_payment(payment_hash)
+    payment = await get_standalone_payment(payment_hash, incoming=True)
     if not payment:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist."

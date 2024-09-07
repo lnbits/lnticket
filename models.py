@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi.param_functions import Query
+from fastapi import Query
 from pydantic import BaseModel
 
 
@@ -20,7 +20,7 @@ class CreateTicketData(BaseModel):
     sats: int = Query(..., ge=0)
 
 
-class Forms(BaseModel):
+class Form(BaseModel):
     id: str
     wallet: str
     name: str
@@ -32,7 +32,7 @@ class Forms(BaseModel):
     time: int
 
 
-class Tickets(BaseModel):
+class Ticket(BaseModel):
     id: str
     form: str
     email: str

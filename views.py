@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.templating import Jinja2Templates
 from lnbits.core.crud import get_wallet
 from lnbits.core.models import User
 from lnbits.decorators import check_user_exists
@@ -11,7 +10,6 @@ from starlette.responses import HTMLResponse
 
 from .crud import get_form
 
-templates = Jinja2Templates(directory="templates")
 lnticket_generic_router = APIRouter()
 
 

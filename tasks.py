@@ -5,7 +5,8 @@ from lnbits.helpers import get_current_extension_name
 from lnbits.tasks import register_invoice_listener
 from loguru import logger
 
-from .crud import get_ticket, set_ticket_paid
+from .crud import get_ticket
+from .services import set_ticket_paid
 
 
 async def wait_for_paid_invoices():
@@ -18,13 +19,13 @@ async def wait_for_paid_invoices():
 
 
 async def on_invoice_paid(payment: Payment) -> None:
-    if payment.extra.get("tag") != "lnticket":
+    if not payment.extra or payment.extra.get("tag") != "lnticket":
         # not a lnticket invoice
         return
 
     ticket = await get_ticket(payment.checking_id)
     if not ticket:
-        logger.error("this should never happen", payment)
+        logger.error("ticket for payment not found", payment)
         return
 
-    await set_ticket_paid(payment.payment_hash)
+    await set_ticket_paid(ticket)

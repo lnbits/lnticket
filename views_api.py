@@ -1,12 +1,11 @@
 import re
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import WalletTypeInfo
 from lnbits.core.services import create_invoice
 from lnbits.decorators import require_admin_key, require_invoice_key
-from starlette.exceptions import HTTPException
 
 from .crud import (
     create_form,
@@ -17,10 +16,10 @@ from .crud import (
     get_forms,
     get_ticket,
     get_tickets,
-    set_ticket_paid,
     update_form,
 )
 from .models import CreateFormData, CreateTicketData, Form, Ticket
+from .services import set_ticket_paid
 
 lnticket_api_router: APIRouter = APIRouter()
 
@@ -147,7 +146,7 @@ async def api_ticket_send_ticket(payment_hash: str):
             status_code=HTTPStatus.NOT_FOUND, detail="Payment does not exist."
         )
     if payment.success:
-        await set_ticket_paid(payment_hash=payment_hash)
+        await set_ticket_paid(ticket)
     return {"paid": payment.success}
 
 

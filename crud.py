@@ -1,10 +1,9 @@
 import time
 from typing import Optional, Union
 
-import httpx
 from lnbits.core.models import Wallet
 from lnbits.db import Database
-from lnbits.helpers import insert_query, update_query, urlsafe_short_hash
+from lnbits.helpers import urlsafe_short_hash
 
 from .models import CreateFormData, CreateTicketData, Form, Ticket
 
@@ -25,71 +24,31 @@ async def create_ticket(
         paid=False,
         time=int(time.time()),
     )
-    await db.execute(
-        insert_query("lnticket.ticket", ticket),
-        ticket.dict(),
-    )
+    await db.insert("lnticket.ticket", ticket)
     return ticket
 
 
-async def set_ticket_paid(payment_hash: str) -> Ticket:
-    row = await db.fetchone(
-        "SELECT * FROM lnticket.ticket WHERE id = :id", {"id": payment_hash}
-    )
-    assert row, "Ticket not found"
-    first_ticket = Ticket(**row)
-    if not first_ticket.paid:
-        await db.execute(
-            "UPDATE lnticket.ticket SET paid = true WHERE id = :id",
-            {"id": payment_hash},
-        )
-
-        formdata = await get_form(first_ticket.form)
-        assert formdata, "Couldn't get form from paid ticket"
-
-        amount = formdata.amountmade + first_ticket.sats
-        await db.execute(
-            "UPDATE lnticket.form2 SET amountmade = :amount WHERE id = :id",
-            {"amount": amount, "id": first_ticket.form},
-        )
-
-        ticket = await get_ticket(payment_hash)
-        assert ticket, "Newly paid ticket could not be retrieved"
-
-        if formdata.webhook:
-            async with httpx.AsyncClient() as client:
-                await client.post(
-                    formdata.webhook,
-                    json={
-                        "form": ticket.form,
-                        "name": ticket.name,
-                        "email": ticket.email,
-                        "content": ticket.ltext,
-                    },
-                    timeout=40,
-                )
-            return ticket
-
-    new_ticket = await get_ticket(payment_hash)
-    assert new_ticket, "Newly paid ticket could not be retrieved"
-    return new_ticket
+async def update_ticket(ticket: Ticket) -> Ticket:
+    await db.update("lnticket.ticket", ticket)
+    return ticket
 
 
 async def get_ticket(ticket_id: str) -> Optional[Ticket]:
-    row = await db.fetchone(
-        "SELECT * FROM lnticket.ticket WHERE id = :id", {"id": ticket_id}
+    return await db.fetchone(
+        "SELECT * FROM lnticket.ticket WHERE id = :id",
+        {"id": ticket_id},
+        Ticket,
     )
-    return Ticket(**row) if row else None
 
 
 async def get_tickets(wallet_ids: Union[str, list[str]]) -> list[Ticket]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
-
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
-    rows = await db.fetchall(f"SELECT * FROM lnticket.ticket WHERE wallet IN ({q})")
-
-    return [Ticket(**row) for row in rows]
+    return await db.fetchall(
+        f"SELECT * FROM lnticket.ticket WHERE wallet IN ({q})",
+        model=Ticket,
+    )
 
 
 async def delete_ticket(ticket_id: str) -> None:
@@ -109,40 +68,31 @@ async def create_form(data: CreateFormData, wallet: Wallet) -> Form:
         amountmade=0,
         time=int(time.time()),
     )
-    await db.execute(
-        insert_query("lnticket.form2", form),
-        form.dict(),
-    )
+    await db.insert("lnticket.form2", form)
     return form
 
 
 async def update_form(form: Form) -> Form:
-    await db.execute(
-        update_query("lnticket.form2", form),
-        form.dict(),
-    )
-    row = await db.fetchone(
-        "SELECT * FROM lnticket.form2 WHERE id = :id", {"id": form.id}
-    )
-    assert row, "Newly updated form couldn't be retrieved"
-    return Form(**row)
+    await db.update("lnticket.form2", form)
+    return form
 
 
 async def get_form(form_id: str) -> Optional[Form]:
-    row = await db.fetchone(
-        "SELECT * FROM lnticket.form2 WHERE id = :id", {"id": form_id}
+    return await db.fetchone(
+        "SELECT * FROM lnticket.form2 WHERE id = :id",
+        {"id": form_id},
+        Form,
     )
-    return Form(**row) if row else None
 
 
 async def get_forms(wallet_ids: Union[str, list[str]]) -> list[Form]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
-
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
-    rows = await db.fetchall(f"SELECT * FROM lnticket.form2 WHERE wallet IN ({q})")
-
-    return [Form(**row) for row in rows]
+    return await db.fetchall(
+        f"SELECT * FROM lnticket.form2 WHERE wallet IN ({q})",
+        model=Form,
+    )
 
 
 async def delete_form(form_id: str) -> None:

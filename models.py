@@ -1,10 +1,12 @@
+from datetime import datetime
 from typing import Optional
 
-from fastapi.param_functions import Query
+from fastapi import Query
 from pydantic import BaseModel
 
 
 class CreateFormData(BaseModel):
+    wallet: str = Query(...)
     name: str = Query(...)
     webhook: str = Query(None)
     description: str = Query(..., min_length=0)
@@ -20,7 +22,7 @@ class CreateTicketData(BaseModel):
     sats: int = Query(..., ge=0)
 
 
-class Forms(BaseModel):
+class Form(BaseModel):
     id: str
     wallet: str
     name: str
@@ -29,10 +31,10 @@ class Forms(BaseModel):
     amount: int
     flatrate: int
     amountmade: int
-    time: int
+    time: datetime
 
 
-class Tickets(BaseModel):
+class Ticket(BaseModel):
     id: str
     form: str
     email: str
@@ -41,4 +43,4 @@ class Tickets(BaseModel):
     wallet: str
     sats: int
     paid: bool
-    time: int
+    time: datetime

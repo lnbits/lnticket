@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import Query
@@ -29,7 +30,7 @@ class Form(BaseModel):
     amount: int
     flatrate: int
     amountmade: int
-    time: int
+    time: datetime
 
 
 class Ticket(BaseModel):
@@ -41,4 +42,4 @@ class Ticket(BaseModel):
     wallet: str
     sats: int
     paid: bool
-    time: int
+    time: datetime

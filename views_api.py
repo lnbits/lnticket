@@ -2,11 +2,10 @@ import re
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import WalletTypeInfo
 from lnbits.core.services import create_invoice
-from lnbits.decorators import require_admin_key, require_invoice_key
+from lnbits.decorators import require_admin_key
 
 from .crud import (
     create_form,
@@ -49,9 +48,12 @@ async def api_form_create(
     form = await create_form(data)
     return form
 
+
 @lnticket_api_router.put("/api/v1/forms/{form_id}", status_code=HTTPStatus.CREATED)
 async def api_form_update(
-    form_id: str, data: CreateFormData, key_info: WalletTypeInfo = Depends(require_admin_key)
+    form_id: str,
+    data: CreateFormData,
+    key_info: WalletTypeInfo = Depends(require_admin_key),
 ) -> Form:
     form = await get_form(form_id)
 
@@ -67,6 +69,7 @@ async def api_form_update(
         setattr(form, key, value)
     form = await update_form(form)
     return form
+
 
 @lnticket_api_router.delete("/api/v1/forms/{form_id}")
 async def api_form_delete(

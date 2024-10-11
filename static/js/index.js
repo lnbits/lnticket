@@ -139,7 +139,7 @@ window.app = Vue.createApp({
         .request(
           'GET',
           '/lnticket/api/v1/forms?all_wallets=true',
-          this.g.user.wallets[0].inkey
+          this.g.user.wallets[0].adminkey
         )
         .then(response => {
           this.forms = response.data.map(obj => {
@@ -213,16 +213,14 @@ window.app = Vue.createApp({
             .request(
               'DELETE',
               '/lnticket/api/v1/forms/' + formsId,
-              _.findWhere(this.g.user.wallets, {id: forms.wallet}).inkey
+              _.findWhere(this.g.user.wallets, {id: forms.wallet}).adminkey
             )
-            .then(response => {
+            .then(() => {
               this.forms = _.reject(this.forms, function (obj) {
                 return obj.id == formsId
               })
             })
-            .catch(function (error) {
-              LNbits.utils.notifyApiError(error)
-            })
+            .catch(LNbits.utils.notifyApiError)
         })
     },
     exportformsCSV() {

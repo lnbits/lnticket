@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 
 class CreateFormData(BaseModel):
+    wallet: str = Query(...)
     name: str = Query(...)
     webhook: str = Query(None)
     description: str = Query(..., min_length=0)

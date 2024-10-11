@@ -2,6 +2,7 @@ import re
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+
 from lnbits.core.crud import get_standalone_payment, get_user
 from lnbits.core.models import WalletTypeInfo
 from lnbits.core.services import create_invoice
@@ -27,7 +28,7 @@ lnticket_api_router: APIRouter = APIRouter()
 @lnticket_api_router.get("/api/v1/forms")
 async def api_forms_get(
     all_wallets: bool = Query(False),
-    key_info: WalletTypeInfo = Depends(require_invoice_key),
+    key_info: WalletTypeInfo = Depends(require_admin_key),
 ) -> list[Form]:
     wallet_ids = [key_info.wallet.id]
 
@@ -39,30 +40,33 @@ async def api_forms_get(
 
 
 @lnticket_api_router.post("/api/v1/forms", status_code=HTTPStatus.CREATED)
-@lnticket_api_router.put("/api/v1/forms/{form_id}")
 async def api_form_create(
     data: CreateFormData,
-    form_id=None,
     key_info: WalletTypeInfo = Depends(require_admin_key),
 ) -> Form:
-    if form_id:
-        form = await get_form(form_id)
-
-        if not form:
-            raise HTTPException(
-                status_code=HTTPStatus.NOT_FOUND, detail="Form does not exist."
-            )
-
-        if form.wallet != key_info.wallet.id:
-            raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN, detail="Not your form."
-            )
-
-        form = await update_form(form_id, **data.dict())
-    else:
-        form = await create_form(data, key_info.wallet)
+    if data.wallet != key_info.wallet.id:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your wallet.")
+    form = await create_form(data)
     return form
 
+@lnticket_api_router.put("/api/v1/forms/{form_id}", status_code=HTTPStatus.CREATED)
+async def api_form_update(
+    form_id: str, data: CreateFormData, key_info: WalletTypeInfo = Depends(require_admin_key)
+) -> Form:
+    form = await get_form(form_id)
+
+    if not form:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="Form does not exist."
+        )
+
+    if form.wallet != key_info.wallet.id:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your form.")
+
+    for key, value in data.dict().items():
+        setattr(form, key, value)
+    form = await update_form(form)
+    return form
 
 @lnticket_api_router.delete("/api/v1/forms/{form_id}")
 async def api_form_delete(

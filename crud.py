@@ -55,12 +55,12 @@ async def delete_ticket(ticket_id: str) -> None:
     await db.execute("DELETE FROM lnticket.ticket WHERE id = :id", {"id": ticket_id})
 
 
-async def create_form(data: CreateFormData, wallet: Wallet) -> Form:
+async def create_form(data: CreateFormData) -> Form:
     form_id = urlsafe_short_hash()
     form = Form(
         id=form_id,
-        wallet=wallet.id,
-        name=wallet.name,
+        wallet=data.wallet,
+        name=data.name,
         webhook=data.webhook,
         description=data.description,
         flatrate=data.flatrate,

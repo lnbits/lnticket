@@ -1,7 +1,6 @@
-import time
+from datetime import datetime
 from typing import Optional, Union
 
-from lnbits.core.models import Wallet
 from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
 
@@ -22,7 +21,7 @@ async def create_ticket(
         wallet=wallet,
         sats=data.sats,
         paid=False,
-        time=int(time.time()),
+        time=datetime.now(),
     )
     await db.insert("lnticket.ticket", ticket)
     return ticket
@@ -66,7 +65,7 @@ async def create_form(data: CreateFormData) -> Form:
         flatrate=data.flatrate,
         amount=data.amount,
         amountmade=0,
-        time=int(time.time()),
+        time=datetime.now(),
     )
     await db.insert("lnticket.form2", form)
     return form

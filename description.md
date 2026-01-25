@@ -1,5 +1,10 @@
-Get paid sats to answer questions
+Charge users per word to send you messages, creating paid support tickets.
 
-Charge a per word amount for people to contact you.
+Its functions include:
 
-Possible applications include, paid support ticketing, PAYG language services, contact spam protection.
+- Setting per-word pricing for incoming messages
+- Creating paid contact forms and support channels
+- Filtering spam through payment requirements
+- Supporting paid language services and consultations
+
+A clever spam-prevention tool for professionals, support teams, and consultants who want to ensure only serious inquiries reach them.

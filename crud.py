@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional, Union
 
 from lnbits.db import Database
 from lnbits.helpers import urlsafe_short_hash
@@ -32,7 +31,7 @@ async def update_ticket(ticket: Ticket) -> Ticket:
     return ticket
 
 
-async def get_ticket(ticket_id: str) -> Optional[Ticket]:
+async def get_ticket(ticket_id: str) -> Ticket | None:
     return await db.fetchone(
         "SELECT * FROM lnticket.ticket WHERE id = :id",
         {"id": ticket_id},
@@ -40,7 +39,7 @@ async def get_ticket(ticket_id: str) -> Optional[Ticket]:
     )
 
 
-async def get_tickets(wallet_ids: Union[str, list[str]]) -> list[Ticket]:
+async def get_tickets(wallet_ids: str | list[str]) -> list[Ticket]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])
@@ -76,7 +75,7 @@ async def update_form(form: Form) -> Form:
     return form
 
 
-async def get_form(form_id: str) -> Optional[Form]:
+async def get_form(form_id: str) -> Form | None:
     return await db.fetchone(
         "SELECT * FROM lnticket.form2 WHERE id = :id",
         {"id": form_id},
@@ -84,7 +83,7 @@ async def get_form(form_id: str) -> Optional[Form]:
     )
 
 
-async def get_forms(wallet_ids: Union[str, list[str]]) -> list[Form]:
+async def get_forms(wallet_ids: str | list[str]) -> list[Form]:
     if isinstance(wallet_ids, str):
         wallet_ids = [wallet_ids]
     q = ",".join([f"'{wallet_id}'" for wallet_id in wallet_ids])

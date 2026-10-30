@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Query
 from pydantic import BaseModel
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 class CreateFormData(BaseModel):
     wallet: str = Query(...)
     name: str = Query(...)
-    webhook: str = Query(None)
+    webhook: str | None = Query(None)
     description: str = Query(..., min_length=0)
     amount: int = Query(..., ge=0)
     flatrate: int = Query(...)
@@ -26,7 +25,7 @@ class Form(BaseModel):
     id: str
     wallet: str
     name: str
-    webhook: Optional[str]
+    webhook: str | None = None
     description: str
     amount: int
     flatrate: int

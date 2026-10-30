@@ -1,8 +1,9 @@
 {
   "name": "Support Tickets",
+  "version": "1.1.0",
   "short_description": "LN support ticket system",
   "tile": "/lnticket/static/image/lntickets.png",
-  "min_lnbits_version": "1.0.0",
+  "min_lnbits_version": "1.7.0-rc1",
   "contributors": [
     {
       "name": "arcbtc",

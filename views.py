@@ -19,7 +19,7 @@ def lnticket_renderer():
 @lnticket_generic_router.get("/", response_class=HTMLResponse)
 async def index(request: Request, user: User = Depends(check_user_exists)):
     return lnticket_renderer().TemplateResponse(
-        "lnticket/index.html", {"request": request, "user": user.json()}
+        "lnticket/index.html", {"request": request, "user": user.model_dump_json()}
     )
 
 

@@ -65,7 +65,7 @@ async def api_form_update(
     if form.wallet != key_info.wallet.id:
         raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your form.")
 
-    for key, value in data.dict().items():
+    for key, value in data.model_dump().items():
         setattr(form, key, value)
     form = await update_form(form)
     return form

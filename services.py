@@ -1,11 +1,11 @@
-import httpx
+from lnbits.utils.safe_http import SafeHttpClient
 
 from .crud import get_form, update_form, update_ticket
 from .models import Ticket
 
 
 async def send_webhook(webhook: str, ticket: Ticket) -> None:
-    async with httpx.AsyncClient() as client:
+    async with SafeHttpClient(read_body=False) as client:
         await client.post(
             webhook,
             json={
